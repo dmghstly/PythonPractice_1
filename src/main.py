@@ -5,9 +5,10 @@ from enum import Enum, unique
 
 import click
 
+from formatters.styles.apa import APACitationFormatter
 from formatters.styles.gost import GOSTCitationFormatter
 from logger import get_logger
-from readers.reader import SourcesReader
+from readers.reader import APASourcesReader, GOSTSourcesReader
 from renderer import Renderer
 from settings import INPUT_FILE_PATH, OUTPUT_FILE_PATH
 
@@ -76,13 +77,26 @@ def process_input(
         path_output,
     )
 
-    models = SourcesReader(path_input).read()
-    formatted_models = tuple(
-        str(item) for item in GOSTCitationFormatter(models).format()
-    )
+    if citation == "GOST":
+        models = GOSTSourcesReader(path_input).read()
+    elif citation == "APA":
+        models = APASourcesReader(path_input).read()
+
+    if citation == "GOST":
+        formatted_models = tuple(
+            str(item) for item in GOSTCitationFormatter(models).format()
+        )
+    elif citation == "APA":
+        formatted_models = tuple(
+            str(item) for item in APACitationFormatter(models).format()
+        )
 
     logger.info("Генерация выходного файла ...")
-    Renderer(formatted_models).render(path_output)
+
+    if citation == "GOST":
+        Renderer(formatted_models).GOSTrender(path_output)
+    elif citation == "APA":
+        Renderer(formatted_models).APArender(path_output)
 
     logger.info("Команда успешно завершена.")
 
